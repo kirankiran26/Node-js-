@@ -11,7 +11,7 @@ let rl=readline.createInterface({
     input:process.stdin,
     output:process.stdout,
 });
-rl.question("What is  ur name",(fname)=>{
+rl.question("What is  ur name ",(fname)=>{
     console.log("You name is "+ fname);
     rl.close();
 })
