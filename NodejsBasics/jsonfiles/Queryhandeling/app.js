@@ -16,7 +16,8 @@ function replacingfun(templet,product){
     return output;
 }
 let s1=server.createServer((request,response)=>{
-    let {query,pathname:path}=url.parse(request.url.toLowerCase());
+    let {query,pathname:path}=url.parse(request.url.toLowerCase(),true);
+    
     if(path==='/' || path==='/home') {
         response.end(indexfile.replace('{{%page%}}',"Home"))
     }
@@ -24,15 +25,24 @@ let s1=server.createServer((request,response)=>{
         response.end(indexfile.replace('{{%page%}}',"about"))
     }
     else if (path==='/product'){
-       if(!query) {
         const modifieditem=datalist.map(item=>replacingfun(itemlist,item)).join('');
+
+
+       if(!query.id) {
         let output=indexfile.replace('{{%page%}}',modifieditem);
         response.end(output);
        }
        else {
-        let product=datalist[query.id];
-        let productDetailResponseHtml = replaceHtml(productDetailHtml, prod);
-        response.end(html.replace('{{%CONTENT%}}', productDetailResponseHtml));
+        
+        let product = datalist.find(item => item.id == query.id);
+        if (product) {
+            let productDetailResponseHtml = replacingfun(itemlist, product);
+            response.end(productDetailResponseHtml);
+        } else {
+            response.end("Product not found");
+        }
+
+
        }
     }   
     else {
