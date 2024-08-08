@@ -35,3 +35,11 @@ s1.on("request",(req,res)=>{
 s1.listen(8000,'127.0.0.1',()=>{
     console.log("The new Request is accepted ");
 })
+
+
+console.log("Nodemone is statted working ");
+console.log("THis is second time ");
+console.log("Hii");
+
+
+
