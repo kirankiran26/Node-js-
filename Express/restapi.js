@@ -1,11 +1,18 @@
 const express = require('express');
 const fs = require('fs');
-let movieslist = JSON.parse(fs.readFileSync('./Moviesdata.json'));
 const app = express();
+
+// Load movies data from JSON file
+let movieslist = JSON.parse(fs.readFileSync('./Moviesdata.json'));
+
+// Middleware to parse JSON request bodies
 app.use(express.json());
 
+// Create a new router for handling movie routes
+let moviesrouter = express.Router();
+
 // Route for '/api/movies' to handle GET and POST requests
-app.route('/api/movies')
+moviesrouter.route('/')
   .get((req, res) => {
     res.status(200).json({
       status: "success",
@@ -16,32 +23,41 @@ app.route('/api/movies')
     });
   })
   .post((req, res) => {
-    const newmovieid = movieslist[movieslist.length - 1].id + 1;
+    const newmovieid = movieslist.length > 0 ? movieslist[movieslist.length - 1].id + 1 : 1;
     const newmovie = Object.assign({ id: newmovieid }, req.body);
     movieslist.push(newmovie);
 
     fs.writeFile('./Moviesdata.json', JSON.stringify(movieslist), (error) => {
+      if (error) {
+        return res.status(500).json({
+          status: "ERROR",
+          message: "Error saving new movie"
+        });
+      }
       res.status(201).json({
         status: "success",
         data: {
-          movieslist: newmovie,
+          movie: newmovie,
         }
       });
     });
   });
 
 // Route for '/api/movies/:id' to handle GET, PATCH, and DELETE requests
-app.route('/api/movies/:id')
+moviesrouter.route('/:id')
   .get((req, res) => {
     const reqedid = parseInt(req.params.id);
     const reqmov = movieslist.find(elm => elm.id === reqedid); 
     if (!reqmov) {
-      return res.status(404).send("Movie not found");
+      return res.status(404).json({
+        status: "ERROR",
+        message: "Movie not found"
+      });
     }
     res.status(200).json({
       status: "success",
       data: {
-        reqmov: reqmov
+        movie: reqmov
       }
     });
   })
@@ -54,9 +70,7 @@ app.route('/api/movies/:id')
         message: "Movie not found"
       });
     }
-    let toupdatemovieindex = movieslist.indexOf(toupdatemovie);
     Object.assign(toupdatemovie, req.body);
-    movieslist[toupdatemovieindex] = toupdatemovie;
 
     fs.writeFile('./Moviesdata.json', JSON.stringify(movieslist), (error) => {
       if (error) {
@@ -67,7 +81,9 @@ app.route('/api/movies/:id')
       }
       res.status(200).json({
         status: "success",
-        data: toupdatemovie,
+        data: {
+          movie: toupdatemovie,
+        }
       });
     });
   })
@@ -97,6 +113,10 @@ app.route('/api/movies/:id')
     });
   });
 
+// Mount the movies router on the '/api/movies' path
+app.use('/api/movies', moviesrouter);
+
+// Start the server
 app.listen(3000, () => {
-  console.log("The server has started...");
+  console.log("The server has started on port 3000...");
 });
